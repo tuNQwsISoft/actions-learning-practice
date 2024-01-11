@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, linux, dev]
+    runs-on: ubuntu-latest
 
     steps:
       - name: checkout repo
@@ -24,7 +24,7 @@ jobs:
       - run: npm run build
 
   test:
-    runs-on: [self-hosted, linux, dev]
+    runs-on: ubuntu-latest
 
     steps:
       - name: checkout repo
