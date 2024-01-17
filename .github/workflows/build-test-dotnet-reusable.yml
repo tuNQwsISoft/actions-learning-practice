@@ -10,6 +10,14 @@ on:
         description: ".NET version"
         type: string
         required: true
+      project-path:
+        description: "Project path"
+        type: string
+        required: true
+      # project-name:
+      #   description: "Project name"
+      #   type: string
+      #   required: true
 
 jobs:
   build:
@@ -22,13 +30,9 @@ jobs:
       with:
         dotnet-version: ${{ inputs.dotnet-version }}
     - name: Install Dependencies
-      run: |
-        cd src/VMS.MainService
-        dotnet restore
+      run: dotnet restore ${{ inputs.project-path }}
     - name: Build
-      run: |
-        cd src/VMS.MainService
-        dotnet build --no-restore
+      run: dotnet build ${{ inputs.project-path }}
   # test:
   #   needs: build
   #   runs-on: ubuntu-latest
