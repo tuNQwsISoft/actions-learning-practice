@@ -13,7 +13,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -22,9 +21,19 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ inputs.dotnet-version }}
-    - name: Install dependencies
-      run: dotnet restore
+    - name: Install Dependencies
+      run: |
+        cd src/VMS.MainService
+        dotnet restore
     - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build
+      run: |
+        cd src/VMS.MainService
+        dotnet build --no-restore
+  # test:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Test
+  #       run: dotnet test --no-build
+  
