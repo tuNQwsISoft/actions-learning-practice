@@ -10,7 +10,7 @@ on:
       app_branch:
         description: "Branch"
         type: string
-        required: true
+        required: false
         default: 'main'
       app_name:
         description: "App name (Ex: imag-fe)"
