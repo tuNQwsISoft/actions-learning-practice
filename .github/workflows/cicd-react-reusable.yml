@@ -1,0 +1,70 @@
+name: build-test-deploy
+on:
+  workflow_call:
+    inputs:
+      cicd_runner:
+        description: 'Use cicd runner'
+        type: boolean
+        required: false
+        default: true
+      app_branch:
+        description: "Branch"
+        type: string
+        required: true
+        default: 'main'
+      app_name:
+        description: "App name (Ex: imag-fe)"
+        type: string
+        required: true
+      stack:
+        description: "Stack"
+        type: string
+        required: true
+      app_service:
+        description: "Service"
+        type: string
+        required: true
+
+jobs:
+  build:
+    runs-on: ${{ (inputs.cicd_runner) && fromJSON('[ "self-hosted", "cicd" ]') || fromJSON('[ "self-hosted"]') }}
+
+    steps:
+      - uses: TooMuch4U/actions-clean@v2.1
+      - name: pull latest source
+        run: |
+            cd /usr/app/${{ (inputs.app_name) }}
+            git fetch --all
+            git checkout ${{ (inputs.app_branch) }}
+            git stash --include-untracked
+            git reset --hard
+            git clean -fd
+            git pull origin ${{ (inputs.app_branch) }}
+
+      - name: build app image
+        run: |
+            cd /usr/app/${{ (inputs.app_name) }}
+            git checkout ${{ (inputs.app_branch) }}
+            docker build -t ${{ (inputs.app_service) }}:${{ (inputs.app_branch) }} .
+
+  ship:
+    needs: build
+    runs-on: ${{ (inputs.cicd_runner) && fromJSON('[ "self-hosted", "cicd" ]') || fromJSON('[ "self-hosted"]') }}
+
+    steps:
+      - uses: TooMuch4U/actions-clean@v2.1
+      - name: push image to registry
+        run: |
+            docker rmi registry.i-soft.com.vn/${{ (inputs.app_service) }}:${{ (inputs.app_branch) }}
+            docker tag ${{ (inputs.app_service) }}:${{ (inputs.app_branch) }} registry.i-soft.com.vn/${{ (inputs.app_service) }}:${{ (inputs.app_branch) }}
+            docker push registry.i-soft.com.vn/${{ (inputs.app_service) }}:${{ (inputs.app_branch) }}
+  deploy:
+    needs: ship
+    runs-on: ${{ (inputs.cicd_runner) && fromJSON('[ "self-hosted", "cicd" ]') || fromJSON('[ "self-hosted"]') }}
+    steps:
+      - uses: TooMuch4U/actions-clean@v2.1
+      - name: start application in production
+        run: |
+          docker service update ${{ (inputs.stack) }}_${{ (inputs.app_service) }} --image registry.i-soft.com.vn/${{ (inputs.app_service) }}:${{ (inputs.app_branch) }}
+          echo 'Deploy app DONE'
+      
